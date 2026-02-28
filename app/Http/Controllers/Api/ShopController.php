@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Item;
-use App\Models\Sale;
+use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Category;
+use App\Models\Credit;
+use App\Models\Item;
+use App\Models\Sale;
 use App\Models\SaleItem;
-use Illuminate\Http\Request;
-use App\Models\StoreInventory;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use App\Models\SalesPointPermission;
+use App\Models\StoreInventory;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ShopController extends Controller
 {
@@ -94,6 +95,7 @@ class ShopController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric',
             'reference' => ['required', 'numeric', Rule::unique('sales', 'reference')],
+            'credit' => 'boolean',
         ]);
 
         $storeId = auth()->user()->store_id;
@@ -106,6 +108,7 @@ class ShopController extends Controller
         $reference = $request->reference;
         $discount = $request->discount;
         $customer = $request->customer;
+        $isCredit = $request->credit;
 
 
         DB::beginTransaction();
@@ -142,7 +145,7 @@ class ShopController extends Controller
                     'total' => $subtotal,
                 ];
 
-                $this->reduceQuantity($item['id'], $item['quantity']); //reduce stock
+                // $this->reduceQuantity($item['id'], $item['quantity']); //reduce stock
             }
 
             $grandTotal = $total - $discount;
@@ -150,18 +153,26 @@ class ShopController extends Controller
             $saleData['subtotal'] = $total;
             $saleData['grandtotal'] = $grandTotal;
 
-            $sale = Sale::create($saleData); //insert into sales
-            foreach ($saleItemData as $item) {
-                $item['sale_id'] = $sale->id;
+            if ($isCredit) {
+                $sale = $this->creditOrderProcess($saleData, $saleItemData, $saleItems);
+            } else {
+                $sale = $this->createNewOrder($saleData, $saleItemData, $saleItems);
             }
-            $sale->saleItems()->createMany($saleItemData); //insert into sale items
+
+            // $sale = Sale::create($saleData); //insert into sales
+            // foreach ($saleItemData as $item) {
+            //     $item['sale_id'] = $sale->id;
+            // }
+            // $sale->saleItems()->createMany($saleItemData); //insert into sale items
+
+            $description = $isCredit ? "Credit Order Placed" : "Paid Order Placed";
 
             $auditTrail = [
                 'user_id' => auth()->id(),
                 'ip_address' => request()->ip(),
                 'store_id' => $storeId,
                 'warehouse_id' => null,
-                'description' => 'Order sales',
+                'description' => $description,
                 'data_before' => json_encode([]), // no previous data since it's a new record
                 'data_after' => json_encode($sale->toArray()),
                 'created_at' => now(),
@@ -182,6 +193,64 @@ class ShopController extends Controller
             return response()->json(['message' => 'Error while processing order ' . $e->getMessage()], 500);
         }
     }
+
+    private function createNewOrder(array $orderData, array $orderItemData, array $orderItems)
+    {
+        $sale = Sale::create($orderData);
+
+        // Attach order ID to each order item
+        foreach ($orderItemData as &$item) {
+            $item['sale_id'] = $sale->id;
+        }
+
+        // Create all order items
+        $sale->saleItems()->createMany($orderItemData);
+
+        // Reduce stock only after successful item creation
+        foreach ($orderItems as $item) {
+            $this->reduceQuantity($item['id'], $item['quantity']);
+        }
+
+        return $sale;
+
+    }
+
+    private function creditOrderProcess(array $orderData, array $orderItemData, array $orderItems)
+    {
+
+
+        //total amount 
+        $total = round($orderData['subtotal'] - $orderData['discount'], 2);
+
+        $credit = Credit::create([
+            'user_id' => $orderData['user_id'],
+            'customer_id' => $orderData['customer_id'],
+            'discount' => $orderData['discount'],
+            'subtotal' => $orderData['subtotal'],
+            'total_amount' => $total,
+            'reference' => $orderData['reference'],
+        ]);
+
+
+
+        // Attach order ID to each order item
+        foreach ($orderItemData as &$item) {
+            $item['credit_id'] = $credit->id;
+        }
+
+        // Create all order items
+        $credit->creditItems()->createMany($orderItemData);
+
+
+        // Reduce stock only after successful item creation
+        foreach ($orderItems as $item) {
+            $this->reduceQuantity($item['id'], $item['quantity']);
+        }
+
+
+        return $credit;
+    }
+
 
     public function fetchOrderById(Request $request)
     {

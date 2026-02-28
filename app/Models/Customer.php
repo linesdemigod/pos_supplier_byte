@@ -29,6 +29,18 @@ class Customer extends Model
         return $this->belongsTo(Store::class);
     }
 
+
+    public function credits()
+    {
+        return $this->hasMany(Credit::class);
+    }
+
+    public function repayments()
+    {
+
+        return $this->hasMany(Repayment::class);
+    }
+
     public function scopeSearch($query, $value)
     {
         if (empty($value)) {

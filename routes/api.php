@@ -1,14 +1,15 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\TaxController;
+
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\CreditController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\FeatureController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\ShopController;
-use App\Http\Controllers\Api\CompanyController;
-use App\Http\Controllers\Api\FeatureController;
-use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\TaxController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
@@ -79,6 +80,25 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     Route::controller(SaleController::class)->group(function () {
         Route::get('/get-sales', 'index');
+    });
+
+    Route::controller(CreditController::class)->group(function () {
+        Route::get('/customer-credits', 'customerCredits');
+        Route::get('/customer-credit/{customer}', 'show');
+
+        Route::get('/credit-detail/{customer}', 'creditDetail');
+        Route::get('/credit-item-detail/{credit}', 'creditItemDetail');
+
+
+        //repayment of credit by customer
+        Route::get('credit-payment', 'creditPaymentDetail');
+
+
+        Route::get('/repayment', 'repayment');
+        Route::get('/fetch-repayment', 'fetchRepayment');
+        Route::post('/pay-repayment', 'payRepayment');
+
+
     });
 
 });
