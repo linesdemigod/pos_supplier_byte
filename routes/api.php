@@ -86,12 +86,15 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('/customer-credits', 'customerCredits');
         Route::get('/customer-credit/{customer}', 'show');
 
-        Route::get('/credit-detail/{customer}', 'creditDetail');
+        Route::get('/credit-detail', 'creditDetail');
         Route::get('/credit-item-detail/{credit}', 'creditItemDetail');
 
 
         //repayment of credit by customer
         Route::get('credit-payment', 'creditPaymentDetail');
+
+        //void
+        Route::put('credit-void/{credit}', 'voidCredit');
 
 
         Route::get('/repayment', 'repayment');

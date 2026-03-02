@@ -14,7 +14,7 @@ class Credit extends Model
     protected $fillable = [
         'user_id',
         'customer_id',
-        'branch_id',
+        'store_id',
         'subtotal',
         'total_amount',
         'discount',
@@ -68,6 +68,14 @@ class Credit extends Model
             $query->where('created_at', 'LIKE', '%' . $value . '%');
         })->orWhereHas('customer', function ($query) use ($value) {
             $query->where('name', 'LIKE', '%' . $value . '%');
+        });
+    }
+
+    public function scopeDate($query, $value)
+    {
+
+        return $query->where(function ($query) use ($value) {
+            $query->where('created_at', 'LIKE', '%' . $value . '%');
         });
     }
 }

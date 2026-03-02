@@ -90,21 +90,41 @@ class CreditController extends Controller
         ], 200);
     }
 
-    public function creditDetail(Request $request, Customer $customer)
+    public function creditDetail(Request $request)
     {
-        $perPage = $request->integer('perPage', 10);
-        $search = $request->input('search', '');
 
-        $credits = Credit::where('customer_id', $customer->id)
-            ->search($search)
+
+        $perPage = $request->integer('per_page', 10);
+        $search = $request->input('q', '');
+        $customerId = $request->input('customer_id');
+        $page = $request->integer('page', 1);
+
+
+
+        $credits = Credit::where('customer_id', $customerId)
+            ->date($search)
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'credits' => $credits,
         ], 200);
 
     }
+
+    public function creditItemDetail(Credit $credit)
+    {
+
+        // $creditItems = $credit->creditOrderItems()->with('item')->get();
+        $creditItems = $credit->load(['customer', 'creditItems.item']);
+
+
+        return response()->json([
+            'creditItems' => $creditItems,
+        ], 200);
+
+    }
+
 
     public function creditPaymentDetail(Request $request)
     {
@@ -204,18 +224,21 @@ class CreditController extends Controller
     public function payRepayment(Request $request)
     {
         $request->validate([
-            'customer' => 'required|exists:customers,id',
-            'amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/']
+            'customer_id' => 'required|exists:customers,id',
+            'amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'payment_method' => 'required|in:cash,momo,card'
         ]);
 
-        $customerId = $request->input('customer');
+        $customerId = $request->input('customer_id');
+        $paymentMethod = $request->input('payment_method');
         $paymentAmount = (float) $request->input('amount');
+
         $now = now();
         $user = auth()->user();
 
         $customer = Customer::find($customerId);
         if (!$customer) {
-            return response()->json(['error' => 'Customer not found'], 404);
+            return response()->json(['message' => 'Customer not found'], 404);
         }
 
         // Calculate customer's total outstanding (sum of credit orders minus total payments)
@@ -233,11 +256,11 @@ class CreditController extends Controller
         $outstanding = $totalCredit - $totalPaid;
 
         if ($outstanding <= 0) {
-            return response()->json(['error' => 'Customer has no outstanding balance'], 400);
+            return response()->json(['message' => 'Customer has no outstanding balance'], 400);
         }
 
         if ($paymentAmount > $outstanding) {
-            return response()->json(['error' => 'Amount exceeds customer\'s outstanding balance'], 400);
+            return response()->json(['message' => 'Amount exceeds customer\'s outstanding balance'], 400);
         }
 
 
@@ -287,7 +310,7 @@ class CreditController extends Controller
                     'user_id' => $user->id,
                     'amount_paid' => $paymentToApply,
                     'store_id' => $user->store_id,
-                    'payment_method' => 'cash',
+                    'payment_method' => $paymentMethod,
                     'customer_id' => $customerId,
                     'reference' => $reference,
                     'date_paid' => now()
@@ -332,9 +355,73 @@ class CreditController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+
+    public function voidCredit(Credit $credit)
+    {
+
+
+        $user = auth()->user();
+        $now = now();
+        $originalData = $credit->getOriginal();
+
+        DB::beginTransaction();
+
+        try {
+
+            if (!$credit) {
+                return;
+            }
+
+            //change tenure status to voided
+            $credit->status = 'voided';
+            $credit->save();
+
+
+            foreach ($credit->creditItems as $orderItem) {
+
+                //restore stock for each credit order item
+                $item = $orderItem->item;
+
+                //restock the store inventory
+                $storeInventory = $item->storeInventories()->where('store_id', $user->store_id)->first();
+                $storeInventory->quantity += $orderItem->quantity;
+                $item->save();
+            }
+
+            foreach ($credit->repayments as $repayment) {
+                //restore stock for each credit order item
+                $repayment->payment_status = 'voided';
+                $repayment->save();
+            }
+
+
+            AuditLog::create([
+                'user_id' => $user->id,
+                'store_id' => $user->store_id,
+                'ip_address' => request()->ip(),
+                'description' => 'Credit Payment',
+                'data_before' => json_encode([]),
+                'data_after' => json_encode($credit->getAttributes()),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Credit voided successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+
+
+    }
+
 
     public function receipt()
     {
