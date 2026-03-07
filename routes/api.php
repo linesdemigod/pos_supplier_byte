@@ -63,6 +63,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::put('/update-customer/{id}', 'update');
         Route::delete('/delete-customer/{id}', 'destroy');
 
+        //customer search
+        Route::get('/customer-search', 'search');
+
 
     });
 
