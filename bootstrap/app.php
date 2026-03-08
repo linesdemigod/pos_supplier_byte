@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'branchSwitch' => \App\Http\Middleware\BranchSwitchMiddleware::class,
             'storeSelection' => \App\Http\Middleware\StoreSelectionMiddleware::class,
             'preventBackToLogin' => \App\Http\Middleware\PreventBackToLoginMiddleware::class,
+            'location.access' => \App\Http\Middleware\EnsureLocationAccess::class,
 
         ]);
     })

@@ -6,7 +6,6 @@ use App\Models\TransferOrder;
 use Livewire\Component;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class TransferOrderTable extends Component
 {
@@ -25,7 +24,7 @@ class TransferOrderTable extends Component
         $filterColumn = $user->store_id ? 'store_id' : 'warehouse_id';
         $filterValue = $user->store_id ?: $user->warehouse_id;
 
-        $items = TransferOrder::with(['user', 'store', 'warehouse', 'storeRequest'])
+        $items = TransferOrder::with(['dispatchedBy', 'acceptedBy', 'store', 'warehouse', 'storeRequest'])
             ->where($filterColumn, $filterValue)
             ->when($this->status !== 'all', function ($query) {
                 $query->where('status', $this->status);

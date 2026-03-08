@@ -47,9 +47,10 @@
 
                             <th scope="col">Store</th>
                             <th scope="col">Warehouse</th>
-                            <th scope="col">Approved By</th>
-                            <th scope="col">Requested Date</th>
-                            <th scope="col">Approved Dated</th>
+                            <th scope="col">Dispatched By</th>
+                            <th scope="col">Dispatched Date</th>
+                            <th scope="col">Accepted By</th>
+                            <th scope="col">Accepted Date</th>
                             <th scope="col">Reference</th>
                             <th scope="col">Order Number</th>
                             <th scope="col">Transfer Status</th>
@@ -62,9 +63,10 @@
                             <tr wire:key="{{ $item->id }}">
                                 <td>{{ $item->store->name ?? 'N/A' }} </td>
                                 <td>{{ $item->warehouse->name ?? 'N/A' }} </td>
-                                <td>{{ $item->user->name ?? 'N/A' }} </td>
-                                <td>{{ $item->storeRequest->requested_date ?? 'N/A' }} </td>
-                                <td> {{ $item->storeRequest->approval_date ?? 'N/A' }} </td>
+                                <td>{{ $item->dispatchedBy->name ?? 'N/A' }} </td>
+                                <td>{{ $item->dispatched_date ?? 'N/A' }} </td>
+                                <td> {{ $item->acceptedBy->name ?? 'N/A' }} </td>
+                                <td> {{ $item->accepted_date ?? 'N/A' }} </td>
                                 <td> {{ $item->storeRequest->reference }} </td>
                                 <td> {{ $item->order_number }} </td>
                                 <td> <span

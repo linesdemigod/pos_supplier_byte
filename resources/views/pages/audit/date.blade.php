@@ -102,15 +102,15 @@
 @endsection
 @section('script')
     <script>
-        const options = {
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric'
-        };
-        const formatter = new Intl.DateTimeFormat('en-UK', options);
+        // const options = {
+        //     year: 'numeric',
+        //     month: 'numeric',
+        //     day: 'numeric',
+        //     hour: 'numeric',
+        //     minute: 'numeric',
+        //     second: 'numeric'
+        // };
+        // const formatter = new Intl.DateTimeFormat('en-UK', options);
 
         const dateFrom = document.querySelector('#date-from');
         const dateTo = document.querySelector('#date-to');

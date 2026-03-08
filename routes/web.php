@@ -79,7 +79,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     });
 
 
-    Route::controller(CustomerController::class)->prefix('customer')->name('customer.')->group(function () {
+    Route::controller(CustomerController::class)->middleware(['location.access:store'])->prefix('customer')->name('customer.')->group(function () {
         Route::get('/customer', 'index')->middleware('can:customer.menu')->name('index');
         Route::get('/create', 'create')->middleware('can:customer.create')->name('create');
         Route::post('/store', 'store')->name('store');

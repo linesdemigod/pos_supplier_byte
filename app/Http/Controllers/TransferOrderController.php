@@ -237,7 +237,8 @@ class TransferOrderController extends Controller
             $requestedData = [
                 'user_id' => $userId,
                 'status' => 'dispatched',
-                'dispatched_by' => $userId
+                'dispatched_by' => $userId,
+                'dispatched_date' => now(),
             ];
 
             // Update the item request
@@ -292,7 +293,8 @@ class TransferOrderController extends Controller
             $transfer->update([
                 'status' => 'delivered',
                 'updated_at' => now(),
-                'accepted_by' => $userId
+                'accepted_by' => $userId,
+                'accepted_date' => now(),
             ]);
 
             //deduct from the warehouse inventory

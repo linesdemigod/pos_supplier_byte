@@ -13,6 +13,8 @@ return new class extends Migration {
         Schema::table('transfer_orders', function (Blueprint $table) {
             $table->unsignedBigInteger('dispatched_by')->nullable()->after('status');
             $table->unsignedBigInteger('accepted_by')->nullable()->after('dispatched_by');
+            $table->dateTime('dispatched_date')->nullable()->after('accepted_by');
+            $table->dateTime('accepted_date')->nullable()->after('dispatched_date');
         });
     }
 

@@ -14,10 +14,12 @@ class TransferOrder extends Model
         'order_number',
         'status',
         'dispatched_by',
-        'accepted_by'
+        'accepted_by',
+        'dispatched_date',
+        'accepted_date'
     ];
 
-    public function dispatchedtedBy()
+    public function dispatchedBy()
     {
         return $this->belongsTo(User::class, 'dispatched_by');
     }

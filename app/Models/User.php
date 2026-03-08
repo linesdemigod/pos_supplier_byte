@@ -53,6 +53,17 @@ class User extends Authenticatable
         ];
     }
 
+
+    public function hasStore()
+    {
+        return $this->store_id !== null;
+    }
+
+    public function hasWarehouse()
+    {
+        return $this->warehouse_id !== null;
+    }
+
     public function store()
     {
 

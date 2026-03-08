@@ -16,6 +16,11 @@ class CustomerController extends Controller
 
     public function index()
     {
+        // $user = auth()->user();
+
+        // if (!$user->hasStore()) {
+        //     abort(404);
+        // }
 
         return view('pages.customer.index');
     }
