@@ -137,6 +137,42 @@ class ItemController extends Controller
         );
     }
 
+    public function getWarehouseItem(Request $request)
+    {
+
+        $request->validate([
+            'item' => 'required|string',
+            'warehouse_id' => 'required|exists:warehouses,id',
+        ], [
+            'item.required' => 'Item search query is required',
+            'item.string' => 'Item search query must be a string',
+            'warehouse_id.required' => 'Select a warehouse is required',
+            'warehouse_id.exists' => 'Warehouse does not exist',
+        ]);
+
+        $searchQuery = $request->input('item');
+        $warehouseId = $request->input('warehouse_id');
+
+        //search item in the specified warehouse
+        $items = Item::whereHas('warehouseInventories', function ($query) use ($warehouseId) {
+            $query->where('warehouse_id', $warehouseId);
+        })
+            ->filter($searchQuery)
+            ->latest() // Order by latest
+            ->get();
+
+        // $items = Item::filter($searchQuery)
+        //     ->latest() // Order by latest
+        //     ->get();
+
+        return response()->json(
+            [
+                'items' => $items,
+            ],
+            200
+        );
+    }
+
     public function excelImport(Request $request)
     {
 

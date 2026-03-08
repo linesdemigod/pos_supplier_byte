@@ -114,6 +114,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::put('/edit/{item}', 'update')->name('update');
         Route::delete('/delete/{item}', 'destroy')->middleware('can:item.delete')->name('delete');
         Route::get('/get-item', 'getItem')->name('items');
+        Route::get('/get-warehouse-item', 'getWarehouseItem')->name('items.warehouse');
         Route::get('/price-adjustment', 'priceAdjustment')->middleware('can:priceManagement.menu')->name('price.adjustment');
         Route::post('/price-adjustment-store', 'priceAdjustmentStore')->name('price.adjustment.store');
 

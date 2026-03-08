@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\Company;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 
@@ -12,7 +11,13 @@ class SaleController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+        $storeId = $user->store_id;
 
+        //send error message when store id is null
+        if ($storeId === null) {
+            return back()->with('error', 'please switch to a store to view a sales.');
+        }
 
         return view('pages.sale.index');
     }

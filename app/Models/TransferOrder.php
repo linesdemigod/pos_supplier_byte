@@ -12,8 +12,21 @@ class TransferOrder extends Model
         'warehouse_id',
         'user_id',
         'order_number',
-        'status'
+        'status',
+        'dispatched_by',
+        'accepted_by'
     ];
+
+    public function dispatchedtedBy()
+    {
+        return $this->belongsTo(User::class, 'dispatched_by');
+    }
+
+
+    public function acceptedBy()
+    {
+        return $this->belongsTo(User::class, 'accepted_by');
+    }
 
     public function transferOrderDetails()
     {

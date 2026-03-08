@@ -20,7 +20,7 @@
                                         <label for="form-label">Search Item</label>
                                         <input type="hidden" value="{{ $item->id }}" class="form-control"
                                             id="request-item-id">
-                                        <input type="text" name="item" class="form-control" id="item-search"
+                                        <input type="text" name="item" class="form-control" id="warehouse-item-search"
                                             autocomplete="off" placeholder="Start typing a item...">
                                         <ul id="suggestions" class="autocomplete-list">
                                         </ul>

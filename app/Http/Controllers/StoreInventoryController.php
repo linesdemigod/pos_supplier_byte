@@ -43,6 +43,10 @@ class StoreInventoryController extends Controller
             'item_id.unique' => 'Item already exists in the store',
         ]);
 
+        //send error message when store id is null
+        if ($storeId === null) {
+            return back()->with('error', 'please switch to a store to add an item.');
+        }
 
 
         DB::beginTransaction();
@@ -78,7 +82,7 @@ class StoreInventoryController extends Controller
             DB::commit();
             return back()->with('message', 'Item added to the store successfully');
         } catch (\Exception $e) {
-            Db::rollBack();
+            DB::rollBack();
             return back()->with('error', 'Error adding Item ro the store ');
         }
 
@@ -86,6 +90,14 @@ class StoreInventoryController extends Controller
 
     public function edit(StoreInventory $inventory)
     {
+
+        $user = auth()->user();
+        $storeId = $user->store_id;
+
+        //send error message when store id is null
+        if ($storeId === null) {
+            return back()->with('error', 'please switch to a store to add an item.');
+        }
 
         return view('pages.storeinventory.edit', [
             'inventory' => $inventory->load('item')
@@ -104,6 +116,7 @@ class StoreInventoryController extends Controller
         $user = auth()->user();
         $storeId = $user->store_id;
         $userId = $user->id;
+
 
         DB::beginTransaction();
         try {
@@ -162,7 +175,10 @@ class StoreInventoryController extends Controller
     public function destroy(Request $request, StoreInventory $inventory)
     {
 
+
         $originalData = $inventory->getOriginal();
+
+
         DB::beginTransaction();
         try {
 

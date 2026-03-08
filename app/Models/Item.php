@@ -39,6 +39,12 @@ class Item extends Model
         return $this->hasOne(StoreInventory::class);
     }
 
+    public function warehouseInventories()
+    {
+
+        return $this->hasOne(WarehouseInventory::class);
+    }
+
     public function holdSaleItems()
     {
 

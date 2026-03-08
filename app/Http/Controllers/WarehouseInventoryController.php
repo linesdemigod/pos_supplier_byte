@@ -16,7 +16,6 @@ class WarehouseInventoryController extends Controller
     public function index()
     {
 
-
         return view('pages.warehouseinventory.index');
     }
 
@@ -44,10 +43,15 @@ class WarehouseInventoryController extends Controller
             'item_id.unique' => 'Item already exists in the warehouse',
         ]);
 
-
+        //send error message when warehouse id is null
+        if ($warehouseId === null) {
+            return back()->with('error', 'please switch to a warehouse to add an item.');
+        }
 
         DB::beginTransaction();
         try {
+
+
             $validate['warehouse_id'] = $warehouseId;
 
             $data = WarehouseInventory::create($validate);
@@ -78,14 +82,21 @@ class WarehouseInventoryController extends Controller
             DB::commit();
             return back()->with('message', 'Item added to the warehouse successfully');
         } catch (\Exception $e) {
-            Db::rollBack();
-            return back()->with('error', 'Error adding Item ro the warehouse ');
+            DB::rollBack();
+            return back()->with('error', 'Error adding Item to the warehouse ');
         }
 
     }
 
     public function edit(WarehouseInventory $inventory)
     {
+        $user = auth()->user();
+        $warehouseId = $user->warehouse_id;
+
+        //send error message when warehouse id is null
+        if ($warehouseId === null) {
+            return back()->with('error', 'please switch to a warehouse to add an item.');
+        }
 
 
 

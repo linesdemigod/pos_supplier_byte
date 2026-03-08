@@ -115,7 +115,7 @@ class TransferOrderController extends Controller
                 'user_id' => $userId,
                 'warehouse_id' => $warehouseId,
                 'ip_address' => $request->ip(),
-                'description' => 'store request creation',
+                'description' => 'Transfer approval',
                 'data_before' => json_encode([]),
                 'data_after' => json_encode($transferOrder->getAttributes()),
                 'created_at' => now(),
@@ -237,6 +237,7 @@ class TransferOrderController extends Controller
             $requestedData = [
                 'user_id' => $userId,
                 'status' => 'dispatched',
+                'dispatched_by' => $userId
             ];
 
             // Update the item request
@@ -250,7 +251,7 @@ class TransferOrderController extends Controller
                 'user_id' => auth()->id(),
                 'warehouse_id' => auth()->user()->warehouse_id,
                 'ip_address' => $request->ip(),
-                'description' => 'transfer order update',
+                'description' => 'transfer order dispatch',
                 'data_before' => json_encode($originalData),
                 'data_after' => json_encode($transferOrder->getAttributes()),
                 'created_at' => now(),
@@ -280,6 +281,7 @@ class TransferOrderController extends Controller
         ]);
 
         $transfer = TransferOrder::findOrFail($validate['id']);
+        $userId = auth()->id();
 
         Gate::authorize('delivered', $transfer); //prevent user from dispatching again
 
@@ -289,7 +291,8 @@ class TransferOrderController extends Controller
 
             $transfer->update([
                 'status' => 'delivered',
-                'updated_at' => now()
+                'updated_at' => now(),
+                'accepted_by' => $userId
             ]);
 
             //deduct from the warehouse inventory
@@ -302,12 +305,41 @@ class TransferOrderController extends Controller
                     ->decrement('quantity', $value['quantity']);
             }
 
+            //loop through store inventory and add
+            foreach ($transfer->transferOrderDetails as $value) {
+                $itemId = $value['item_id'];
+                $quantity = $value['quantity'];
+                $storeId = $transfer->store_id;
+
+                // Check if the item already exists in the store inventory
+                $existingInventory = DB::table('store_inventories')
+                    ->where('item_id', $itemId)
+                    ->where('store_id', $storeId)
+                    ->first();
+
+                if ($existingInventory) {
+                    // If it exists, update the quantity
+                    DB::table('store_inventories')
+                        ->where('id', $existingInventory->id)
+                        ->increment('quantity', $quantity);
+                } else {
+                    // If it doesn't exist, create a new record
+                    DB::table('store_inventories')->insert([
+                        'item_id' => $itemId,
+                        'store_id' => $storeId,
+                        'quantity' => $quantity,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
 
             $auditTrail = [
                 'user_id' => auth()->id(),
                 'store_id' => auth()->user()->store_id,
                 'ip_address' => $request->ip(),
-                'description' => 'transfer order update',
+                'description' => 'transfer order delivered',
                 'data_before' => json_encode($originalData),
                 'data_after' => json_encode($transfer->getAttributes()),
                 'created_at' => now(),

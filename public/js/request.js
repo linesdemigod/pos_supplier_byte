@@ -1,10 +1,92 @@
 if (pageId === "request_item") {
     const itemInput = document?.querySelector("#item-search");
+    const warehouseItemInput = document?.querySelector(
+        "#warehouse-item-search"
+    );
     const suggestionsList = document?.querySelector("#suggestions");
     const cartTable = document?.getElementById("cart-table");
     const warehouseSelect = document?.querySelector("#warehouse_id");
 
     itemInput?.addEventListener("keyup", debounce(searchItem, 300));
+    warehouseItemInput?.addEventListener(
+        "keyup",
+        debounce(searchItemInWarehouse, 300)
+    );
+
+    async function searchItemInWarehouse() {
+        //validate if warehouse is selected
+        if (
+            warehouseSelect.value === "" ||
+            warehouseSelect.value === null ||
+            warehouseSelect.value === "0"
+        ) {
+            document.querySelector(".warehouse-error").textContent =
+                "Please select a warehouse first.";
+            return;
+        } else {
+            document.querySelector(".warehouse-error").textContent = "";
+        }
+
+        try {
+            if (warehouseItemInput.value === "") {
+                return;
+            }
+            const response = await axios.get("/item/get-warehouse-item", {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                params: {
+                    item: warehouseItemInput.value,
+                    warehouse_id: warehouseSelect.value,
+                },
+            });
+            const { items } = response.data;
+
+            displayWarehouseSuggestions(items);
+        } catch (error) {
+            const errors = error?.response?.data.errors ?? {};
+            document.querySelector(".warehouse-error").textContent =
+                errors.warehouse_id ?? "";
+            console.log(error);
+        }
+    }
+
+    function displayWarehouseSuggestions(items) {
+        // Clear previous suggestions
+        suggestionsList.innerHTML = "";
+
+        // Show suggestions if any item matches
+        if (items && items.length > 0) {
+            items.forEach((item) => {
+                const listItem = document.createElement("li");
+                let itemInputWidth = warehouseItemInput.offsetWidth;
+
+                const itemName = item.name;
+                const price = item.price;
+
+                listItem.textContent = `${itemName} - ${price} `;
+                listItem.style.padding = "8px";
+                listItem.style.cursor = "pointer";
+                listItem.style.width = `${itemInputWidth}px`;
+                listItem.classList.add(
+                    "list-dropdown",
+                    "border-2",
+                    "border-bottom"
+                );
+
+                // Add click event listener to select the item
+                listItem.addEventListener("click", () => {
+                    // itemInput.value = itemName;
+                    addToTable(item);
+                    //  itemCode.value = item.theCode;
+                    suggestionsList.innerHTML = "";
+                    warehouseItemInput.value = "";
+                });
+
+                suggestionsList.appendChild(listItem);
+            });
+        }
+    }
 
     async function searchItem() {
         try {

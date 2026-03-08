@@ -1,8 +1,7 @@
 @extends('layout.layout')
 
-@section('title')
-    {{ 'Store Request Item' }}
-@endsection
+@section('title', 'Store Request Item')
+
 @section('page-id', 'request_item')
 
 @section('content')
@@ -13,12 +12,12 @@
                 <div class="col-md-12 mx-auto">
                     <div class="card border-1 mb-3 border">
                         <div class="card-body">
-                            <h3 class="py-2 text-center">Request Items</h3>
+                            <h3 class="py-2 text-center">Request Items From Warehouse</h3>
                             <div class="row">
                                 <div class="col-xxl-8 mb-4">
                                     <div class="item-search-container form-group">
                                         <label for="form-label">Search Item</label>
-                                        <input type="text" name="item" class="form-control" id="item-search"
+                                        <input type="text" name="item" class="form-control" id="warehouse-item-search"
                                             autocomplete="off" placeholder="Start typing a item...">
                                         <ul id="suggestions" class="autocomplete-list">
                                         </ul>
