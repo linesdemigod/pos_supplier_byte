@@ -81,11 +81,11 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('/company', 'index');
     });
 
-    Route::controller(SaleController::class)->group(function () {
+    Route::controller(SaleController::class)->middleware(['location.access:store'])->group(function () {
         Route::get('/get-sales', 'index');
     });
 
-    Route::controller(CreditController::class)->group(function () {
+    Route::controller(CreditController::class)->middleware(['location.access:store'])->group(function () {
         Route::get('/customer-credits', 'customerCredits');
         Route::get('/customer-credit/{customer}', 'show');
 

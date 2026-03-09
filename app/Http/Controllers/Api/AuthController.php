@@ -46,7 +46,7 @@ class AuthController extends Controller
 
             // Return user and token
             return response([
-                'user' => $user,
+                'user' => $user->load(relations: ['store', 'warehouse']),
                 'token' => $user->createToken('secret')->plainTextToken,
             ], 200);
         } catch (\Exception $e) {

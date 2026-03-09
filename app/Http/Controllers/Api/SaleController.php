@@ -18,7 +18,7 @@ class SaleController extends Controller
         $orders = Sale::with(['customer', 'user', 'saleItems.item'])
             // ->whereIn('payment_status', ['paid', 'credit'])
             ->search($search)
-            ->whereIn('payment_status', ['paid', 'voided'])
+            ->whereIn('payment_status', ['paid', 'voided', 'void'])
             ->latest()
             ->paginate($perPage, ['*'], 'page', $page);
 

@@ -18,11 +18,11 @@ class EnsureLocationAccess
         $user = auth()->user();
 
         if ($type === 'store' && $user->store_id === null) {
-            abort(404);
+            return response()->view('errors.403', ['reason' => 'forbidden'], 403);
         }
 
         if ($type === 'warehouse' && $user->warehouse_id === null) {
-            abort(404);
+            return response()->view('errors.403', ['reason' => 'forbidden'], 403);
         }
 
         return $next($request);

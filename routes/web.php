@@ -63,7 +63,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::put('/update/{shift}', 'closeShift')->name('update');
     });
 
-    Route::controller(ShopController::class)->name('shop.')->group(function () {
+    Route::controller(ShopController::class)->middleware(['location.access:store'])->name('shop.')->group(function () {
         Route::get('/shop', 'index')->middleware('can:shop.menu')->name('index');
         Route::get('/get-item', 'getItem')->name('items');
 
@@ -241,7 +241,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/branches', 'getBranchs')->name('getBranchs');
     });
 
-    Route::controller(CreditController::class)->middleware('can:credit.menu')->prefix('credit')->name('credit.')->group(function () {
+    Route::controller(CreditController::class)->middleware(['can:credit.menu', 'location.access:store'])->prefix('credit')->name('credit.')->group(function () {
         Route::get('/index', 'index')->name('index');
         Route::get('/summary/{customer}', 'summary')->middleware('can:credit.summary')->name('summary');
         Route::get('/detail/{customer}', 'creditDetail')->middleware('can:credit.detail')->name('detail');
@@ -271,7 +271,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::delete('/company/{company}', 'destroy')->name('destroy');
     });
 
-    Route::controller(SaleController::class)->prefix('sale')->name('sale.')->group(function () {
+    Route::controller(SaleController::class)->middleware(['location.access:store'])->prefix('sale')->name('sale.')->group(function () {
         Route::get('/index', 'index')->middleware('can:sale.menu')->name('index');
         Route::get('/show/{sale}', 'show')->middleware('can:sale.show')->name('show');
         Route::get('/print/{id}', 'printReceipt')->middleware('can:sale.print')->name('print');
@@ -300,7 +300,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/price', 'price')->name('item.price');
     });
 
-    Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->group(function () {
+    Route::controller(SupplierController::class)->middleware(['location.access:store'])->prefix('supplier')->name('supplier.')->group(function () {
         Route::get('/index', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         // Route::get('/suppliers', 'suppliers')->name('suppliers');

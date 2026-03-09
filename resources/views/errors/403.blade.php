@@ -16,11 +16,20 @@
             <div class="container">
                 <div class="min-vh-100 d-flex justify-content-center align-items-center container">
                     <div class="row justify-content-center align-items-center">
-                        <div class="col-sm-12 col-md-12 mx-auto text-center">
-                            <h1 class="fw-normal text-dark" style="font-size: 3rem;">Access Forbidden</h1>
-
+                        @if (isset($reason) && $reason === 'forbidden')
+                            <h1 class="text-danger"><b>Access Denied</b></h1>
+                            <p class="text-muted mb-4 mt-2">
+                                You cannot access this page with the current store/branch<br>
+                                Please contact your administrator for assistance.
+                            </p>
                             <a href="{{ route('dashboard') }}" class="btn btn-dark mb-5">Return Home</a>
-                        </div>
+                        @else
+                            <div class="col-sm-12 col-md-12 mx-auto text-center">
+                                <h1 class="fw-normal text-dark" style="font-size: 3rem;">Access Forbidden</h1>
+
+                                <a href="{{ route('dashboard') }}" class="btn btn-dark mb-5">Return Home</a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
