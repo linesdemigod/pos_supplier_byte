@@ -152,6 +152,19 @@
                     </li>
                 @endcan
 
+                @can('credit.menu')
+                    <li @class([
+                        'nav-item',
+                        'active' => Str::startsWith(request()->route()->getName(), 'credit'),
+                    ])>
+                        <a href="{{ route('credit.index') }}">
+                            <i class="fas fa-user"></i>
+                            <p>Creditors</p>
+
+                        </a>
+                    </li>
+                @endcan
+
                 @can('inventory.menu')
                     <li @class([
                         'nav-item',

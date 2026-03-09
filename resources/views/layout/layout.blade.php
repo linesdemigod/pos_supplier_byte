@@ -159,6 +159,16 @@
                 minute: '2-digit',
                 second: '2-digit'
             });
+
+            // const now = new Date();
+
+            // // Start of the current month
+            // const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            // // End of the current month
+            // const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+            // const formatDate = date => date.toISOString().split('T')[0];
         </script>
         <x-js-flash />
 

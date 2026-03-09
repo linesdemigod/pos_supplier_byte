@@ -3,16 +3,16 @@
 namespace Database\Seeders;
 
 use App\Models\BranchSwitch;
+use App\Models\Category;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Item;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Store;
 use App\Models\StoreInventory;
 use App\Models\TimeRestriction;
 use App\Models\User;
-use App\Models\Store;
-use App\Models\Company;
-use App\Models\Category;
 use App\Models\Warehouse;
+use Database\Seeders\NewRolePermissionSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -45,6 +45,7 @@ class DatabaseSeeder extends Seeder
         //     BranchSwitchSeeder::class,
         //     TimeRestrictionSeeder::class,
         //     SalesPointPermissionSeeder::class
+        //     NewRolePermissionSeeder::class
         // ]);
 
 

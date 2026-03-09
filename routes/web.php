@@ -1,35 +1,36 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ItemController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\ShopController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\StoreController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CreditController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\DailySaleController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\WarehouseController;
-use App\Http\Controllers\AuditTrailController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\ReturnItemController;
+use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ItemRequestController;
 use App\Http\Controllers\MonthlySaleController;
-use App\Http\Controllers\StoreRequestController;
-use App\Http\Controllers\SwitchBranchController;
-use App\Http\Controllers\Report\ReportController;
-use App\Http\Controllers\TransferOrderController;
-use App\Http\Controllers\StoreInventoryController;
-use App\Http\Controllers\TimeRestrictionController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Report\ItemReportController;
+use App\Http\Controllers\Report\ReportController;
 use App\Http\Controllers\Report\SaleReportController;
-use App\Http\Controllers\WarehouseInventoryController;
+use App\Http\Controllers\ReturnItemController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalePointPermissionController;
+use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\StoreController;
+use App\Http\Controllers\StoreInventoryController;
+use App\Http\Controllers\StoreRequestController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SwitchBranchController;
+use App\Http\Controllers\TimeRestrictionController;
+use App\Http\Controllers\TransferOrderController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\WarehouseInventoryController;
+use Illuminate\Support\Facades\Route;
 
 Route::controller(AuthController::class)->group(function () {
     Route::get('/', 'index')->middleware('preventBackToLogin')->name('home');
@@ -238,6 +239,17 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
         //get branchs
         Route::get('/branches', 'getBranchs')->name('getBranchs');
+    });
+
+    Route::controller(CreditController::class)->middleware('can:credit.menu')->prefix('credit')->name('credit.')->group(function () {
+        Route::get('/index', 'index')->name('index');
+        Route::get('/summary/{customer}', 'summary')->middleware('can:credit.summary')->name('summary');
+        Route::get('/detail/{customer}', 'creditDetail')->middleware('can:credit.detail')->name('detail');
+        Route::get('/item-detail/{credit}', 'creditItemDetail')->name('item.detail');
+
+        //repayment of credit by customer
+        Route::get('credit-payment', 'creditPaymentDetail')->name('payment.detail');
+
     });
 
     Route::controller(ReturnItemController::class)->prefix('return-item')->name('return.')->group(function () {
