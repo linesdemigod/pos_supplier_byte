@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Sale;
 use App\Models\Shift;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +24,22 @@ class ShiftController extends Controller
             $shiftTotal = $this->getUserShiftOrdersTotal($shift->id);
         }
 
-        return view('pages.shift.index', compact('shift', 'shiftTotal'));
+        $forceCloseShift = false;
+
+        if ($shift && $shift->status === 'open') {
+            $shiftDate = Carbon::parse($shift->opened_at)->toDateString();
+            $today = Carbon::today()->toDateString();
+
+            if ($shiftDate < $today) {
+                $forceCloseShift = true;
+            }
+        }
+
+        return response()->json([
+            'shift' => $shift,
+            'shiftTotal' => $shiftTotal,
+            'forceCloseShift' => $forceCloseShift,
+        ], 200);
     }
 
     public function openShift(Request $request)
@@ -35,7 +52,7 @@ class ShiftController extends Controller
         $existingShift = Shift::where('user_id', $userId)->whereNull('closed_at')->first();
 
         if ($existingShift) {
-            return back()->with('error', 'You already have an open shift.');
+            return response()->json(['error' => 'You already have an open shift.'], 400);
         }
 
 
@@ -45,14 +62,20 @@ class ShiftController extends Controller
             'starting_cash' => $validated['starting_cash'],
         ]);
 
-        return back()->with('message', 'Shift opened successfully');
+        return response()->json(['message' => 'Shift opened successfully'], 200);
     }
 
-    public function closeShift(Request $request, Shift $shift)
+    public function closeShift(Request $request, $id)
     {
+
         $validated = $request->validate([
             'closing_cash' => ['required', 'regex:/^\d+(\.\d+)?$/'],
         ]);
+
+        $shift = Shift::findOrFail($id);
+
+        //protect shift
+        // Gate::authorize('update', $shift);
 
         //disallow closing of shift if user's shift orders are not paid
         $unpaidOrdersCount = Sale::where('shift_id', $shift->id)
@@ -60,7 +83,7 @@ class ShiftController extends Controller
             ->count();
 
         if ($unpaidOrdersCount > 0) {
-            return back()->with('error', 'Cannot close shift with unpaid orders.');
+            return response()->json(['message' => 'Cannot close shift with unpaid orders.'], 400);
         }
 
 
@@ -70,7 +93,7 @@ class ShiftController extends Controller
 
 
         //calculate cash difference
-        $cashDifference = ($shift->starting_cash + $shiftTotal) - $validated['closing_cash'];
+        $cashDifference = ($shift->opening_cash + $shiftTotal) - $validated['closing_cash'];
 
 
         $updateShift = $shift->update([
@@ -81,7 +104,7 @@ class ShiftController extends Controller
             'cash_difference' => $cashDifference,
         ]);
 
-        return back()->with('message', 'Shift closed successfully');
+        return response()->json(['message' => 'Shift closed successfully'], 200);
     }
 
 

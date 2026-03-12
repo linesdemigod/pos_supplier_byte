@@ -20,9 +20,9 @@
                         <div class="col-xxl-6 mb-3">
                             <label for="name" class="form-label">Starting Cash</label>
 
-                            <input type="number" name="opening_cash" id="discount" class="form-control discount"
+                            <input type="number" name="starting_cash" id="discount" class="form-control discount"
                                 value="0">
-                            @error('opening_cash')
+                            @error('starting_cash')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
@@ -36,8 +36,8 @@
 
                     <table class="table">
                         <tr>
-                            <th>Opening Cash</th>
-                            <td>{{ number_format($shift->opening_cash, 2) ?? 0 }}</td>
+                            <th>Starting Cash</th>
+                            <td>{{ number_format($shift->starting_cash, 2) ?? 0 }}</td>
                         </tr>
                         <tr>
                             <th>Gross Sales</th>

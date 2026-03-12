@@ -7,9 +7,9 @@ use App\Http\Controllers\Api\CreditController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\FeatureController;
 use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\TaxController;
-use App\Http\Controllers\ShiftController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -108,10 +108,12 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     });
 
-    Route::controller(ShiftController::class)->middleware('can:shift.menu')->prefix('shift')->name('shift.')->group(function () {
-        Route::get('/index', 'index')->name('index');
-        Route::post('/store', 'openShift')->name('store');
-        Route::put('/update/{shift}', 'closeShift')->name('update');
+    Route::controller(ShiftController::class)->middleware(['location.access:store'])->group(function () {
+        Route::get('/get-shift', 'index');
+        Route::post('/open-shift', 'openShift');
+        Route::put('/close-shift/{id}', 'closeShift');
     });
+
+
 
 });
