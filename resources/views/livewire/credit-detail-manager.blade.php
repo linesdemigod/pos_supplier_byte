@@ -32,6 +32,7 @@
                     <thead class="table-primary">
                         <tr>
                             <th>Date</th>
+                            <th>User</th>
                             <th>reference</th>
                             <th>Subtotal</th>
                             <th scope="col">Discount</th>
@@ -44,6 +45,7 @@
                         @foreach ($credits as $credit)
                             <tr wire:key="{{ $credit->id }}">
                                 <td> {{ date_format($credit->created_at, 'd-m-Y h:i:s') }} </td>
+                                <td> {{ $credit->user?->name }} </td>
                                 <td> {{ $credit->reference }} </td>
                                 <td>{{ number_format($credit->subtotal, 2) }}</td>
                                 <td>{{ number_format($credit->discount, 2) }}</td>

@@ -2,21 +2,27 @@
 
 namespace App\Models;
 
+use App\BelongsToStoreOrWarehouse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Shift extends Model
 {
     /** @use HasFactory<\Database\Factories\ShiftFactory> */
-    use HasFactory;
+    use HasFactory, BelongsToStoreOrWarehouse;
 
     protected $fillable = [
         'user_id',
-        'start_time',
-        'end_time',
+        'store_id',
+        'opened_at',
+        'closed_at',
         'status',
         'total_sales',
-        'tenant_id'
+        'store_id',
+        'starting_cash',
+        'closing_cash',
+        'expected_cash',
+        'cash_difference'
     ];
 
     public function user()

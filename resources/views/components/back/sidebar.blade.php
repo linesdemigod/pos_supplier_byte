@@ -164,6 +164,16 @@
                         </a>
                     </li>
                 @endcan
+                <li @class([
+                    'nav-item',
+                    'active' => Str::startsWith(request()->route()->getName(), 'shift'),
+                ])>
+                    <a href="{{ route('shift.index') }}">
+                        <i class="fas fa-share"></i>
+                        <p>Shift</p>
+
+                    </a>
+                </li>
 
                 @can('inventory.menu')
                     <li @class([

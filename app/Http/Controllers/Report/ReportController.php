@@ -66,4 +66,25 @@ class ReportController extends Controller
             'customer' => $customer
         ]);
     }
+
+    public function shift()
+    {
+        $dates = $this->getCurrentMonthRange();
+
+        return view('pages.report.staff.shift', [
+            'dates' => $dates
+        ]);
+    }
+
+    private function getCurrentMonthRange(): array
+    {
+        // $startOfMonth = Carbon::now()->startOfMonth();
+        // $endOfMonth = Carbon::now()->endOfMonth();
+
+        return $monthRange = [
+            'start' => now()->startOfMonth()->format('Y-m-d'),
+            'end' => now()->endOfMonth()->format('Y-m-d')
+        ];
+        ;
+    }
 }

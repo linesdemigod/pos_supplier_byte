@@ -57,6 +57,7 @@ document.addEventListener("click", function (event) {
 });
 
 if (pageId === "shop") {
+    let creditCustomer = false;
     const itemInput = document.querySelector("#item-search");
     const suggestionsList = document.querySelector("#suggestions");
     const customerSuggestionsList = document.querySelector(
@@ -64,6 +65,7 @@ if (pageId === "shop") {
     );
     const cartTable = document.getElementById("cart-table");
     const categoryInput = document.querySelector("#category-search");
+    const creditCustomerCheckbox = document.getElementById("credit-customer");
     // const customerSelect = document.querySelector("#customer_id");
 
     // Get the modal and button
@@ -229,6 +231,17 @@ if (pageId === "shop") {
         `;
 
         customerContainer.innerHTML = customerTemplate;
+    }
+
+    //check if it is null
+    if (creditCustomerCheckbox != null) {
+        creditCustomerCheckbox.addEventListener("change", () => {
+            if (creditCustomerCheckbox.checked) {
+                creditCustomer = true;
+            } else {
+                creditCustomer = false;
+            }
+        });
     }
 
     document.addEventListener("click", (e) => {
@@ -471,6 +484,7 @@ if (pageId === "shop") {
                     discount: discount.value,
                     customer: customerId,
                     items: orderItems,
+                    credit: creditCustomer,
                 });
 
                 const { message, id } = res.data;
@@ -487,7 +501,11 @@ if (pageId === "shop") {
                     document.querySelector("#customer-container").innerHTML =
                         "";
 
-                    url = `/print-receipt/${id}`;
+                    creditCustomer == true
+                        ? (url = `/print-credit-receipt/${id}`)
+                        : (url = `/print-receipt/${id}`);
+
+                    // url = `/print-receipt/${id}`;
 
                     //print receipt
                     window.open(url, "_blank");
@@ -497,10 +515,15 @@ if (pageId === "shop") {
             }
         } catch (error) {
             const status = error?.response.status;
+            const errors = error.response?.data?.errors ?? {};
 
             if (status === 422) {
                 // validation error
-                notyf.error("Please set the monthly sale session");
+                notyf.error(errors.customer[0] ?? "");
+            }
+            if (status === 400) {
+                notyf.error(error?.response?.data.error ?? "");
+                console.log(errors);
             }
             console.log(error);
         }

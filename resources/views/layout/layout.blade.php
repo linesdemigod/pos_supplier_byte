@@ -160,6 +160,14 @@
                 second: '2-digit'
             });
 
+            const formatLocalCurrency = (value) => {
+                const number = parseFloat(value ?? 0);
+                return number.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            };
+
             // const now = new Date();
 
             // // Start of the current month

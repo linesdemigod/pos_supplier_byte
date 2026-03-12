@@ -158,7 +158,6 @@
         const searchMessage = document.getElementById('search-message')
 
         // const dateRange = `${formatDate(startOfMonth.value)} to ${formatDate(endOfMonth.value)}`
-        const dateRange = `${startOfMonth.value} to ${endOfMonth.value}`
 
 
 
@@ -169,6 +168,7 @@
 
             tableBody.innerHTML = "";
             searchBtn.disabled = true;
+            const dateRange = `${startOfMonth.value} to ${endOfMonth.value}`
 
             const customerId = "{{ $customer->id }}";
             try {

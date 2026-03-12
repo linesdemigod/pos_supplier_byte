@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\BelongsToStoreOrWarehouse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
     /** @use HasFactory<\Database\Factories\SaleFactory> */
-    use HasFactory;
+    use HasFactory, BelongsToStoreOrWarehouse;
 
     protected $fillable = [
         'user_id',
@@ -22,7 +23,8 @@ class Sale extends Model
         'payment_method',
         'reference',
         'payment_status',
-        'shift_id'
+        'shift_id',
+        'total_tax'
     ];
 
     public function saleItems()

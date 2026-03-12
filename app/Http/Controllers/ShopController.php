@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Item;
-use App\Models\Sale;
-use App\Models\Shift;
-use App\Models\Company;
 use App\Models\AuditLog;
 use App\Models\Category;
+use App\Models\Company;
+use App\Models\Credit;
 use App\Models\Customer;
 use App\Models\HoldSale;
-use App\Models\DailySale;
-use App\Models\MonthlySale;
-use Illuminate\Support\Str;
 use App\Models\HoldSaleItem;
-use Illuminate\Http\Request;
-use App\Models\StoreInventory;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
+use App\Models\Item;
+use App\Models\Sale;
 use App\Models\SalesPointPermission;
-use Illuminate\Support\Facades\Cookie;
+use App\Models\Shift;
+use App\Models\StoreInventory;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 
 
@@ -33,24 +33,29 @@ class ShopController extends Controller
         //get categories
         $user = auth()->user();
         $store = $user->store_id;
+        $userId = $user->id;
         // get categories
         $categories = Category::latest()->get();
 
-        //get the last daily sales
-        // $lastDailySale = DailySale::where('store_id', $store)->latest('id')->first();
+        //get the user's current shift
+        $shift = Shift::where('user_id', $userId)->latest('id')->first();
 
+        //force user to closed shift the next day if the user didn't close previous day shift
+        $forceCloseShift = false;
 
+        if ($shift && $shift->status === 'open') {
+            $shiftDate = Carbon::parse($shift->opened_at)->toDateString();
+            $today = Carbon::today()->toDateString();
 
-
-
-        // $customers = Customer::latest()
-        //     ->where('store_id', $store)
-        //     ->get();
+            if ($shiftDate < $today) {
+                $forceCloseShift = true;
+            }
+        }
 
         return view('pages.shop.index', [
             'categories' => $categories,
-            // 'lastDailySale' => $lastDailySale,
-            // 'customers' => $customers,
+            'shift' => $shift,
+            'forceCloseShift' => $forceCloseShift
         ]);
 
     }
@@ -88,9 +93,15 @@ class ShopController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric',
             'reference' => ['required', 'numeric', Rule::unique('sales', 'reference')],
+            'customer' => 'required_if:credit,true|nullable|exists:customers,id',
+            'credit' => 'required|boolean',
+        ], [
+            'customer.required_if' => 'Customer is required when credit is selected.',
         ]);
 
-        $storeId = auth()->user()->store_id;
+        $user = auth()->user();
+        $storeId = $user->store_id;
+        $shiftId = $this->userShift();
         // $lastSale = DailySale::where('store_id', $storeId)->latest('id')->first();
         // $lastMonthSale = MonthlySale::where('store_id', $storeId)->latest('id')->first();
 
@@ -102,6 +113,7 @@ class ShopController extends Controller
         $reference = $request->reference;
         $discount = $request->discount;
         $customer = $request->customer;
+        $isCredit = filter_var($request->credit, FILTER_VALIDATE_BOOLEAN);
 
 
         DB::beginTransaction();
@@ -116,6 +128,7 @@ class ShopController extends Controller
                 'customer_id' => $customer,
                 'payment_method' => 'cash',
                 'payment_status' => 'paid',
+                'shift_id' => $shiftId,
             ];
 
             $saleItemData = [];
@@ -138,7 +151,7 @@ class ShopController extends Controller
                     'total' => $subtotal,
                 ];
 
-                $this->reduceQuantity($item['id'], $item['quantity']); //reduce stock
+                // $this->reduceQuantity($item['id'], $item['quantity']); //reduce stock
             }
 
             $grandTotal = $total - $discount;
@@ -146,18 +159,27 @@ class ShopController extends Controller
             $saleData['subtotal'] = $total;
             $saleData['grandtotal'] = $grandTotal;
 
-            $sale = Sale::create($saleData); //insert into sales
-            foreach ($saleItemData as $item) {
-                $item['sale_id'] = $sale->id;
+            // $sale = Sale::create($saleData); //insert into sales
+            // foreach ($saleItemData as $item) {
+            //     $item['sale_id'] = $sale->id;
+            // }
+            // $sale->saleItems()->createMany($saleItemData); //insert into sale items
+
+
+            if ($isCredit) {
+                $sale = $this->creditOrderProcess($saleData, $saleItemData, $saleItems);
+            } else {
+                $sale = $this->createNewOrder($saleData, $saleItemData, $saleItems);
             }
-            $sale->saleItems()->createMany($saleItemData); //insert into sale items
+
+            $description = $isCredit ? "Credit Order Placed" : "Paid Order Placed";
 
             $auditTrail = [
                 'user_id' => auth()->id(),
                 'ip_address' => request()->ip(),
                 'store_id' => $storeId,
                 'warehouse_id' => null,
-                'description' => 'Order sales',
+                'description' => $description,
                 'data_before' => json_encode([]), // no previous data since it's a new record
                 'data_after' => json_encode($sale->toArray()),
                 'created_at' => now(),
@@ -179,6 +201,64 @@ class ShopController extends Controller
         }
 
 
+    }
+
+    private function createNewOrder(array $orderData, array $orderItemData, array $orderItems)
+    {
+        $sale = Sale::create($orderData);
+
+        // Attach order ID to each order item
+        foreach ($orderItemData as &$item) {
+            $item['sale_id'] = $sale->id;
+        }
+
+        // Create all order items
+        $sale->saleItems()->createMany($orderItemData);
+
+        // Reduce stock only after successful item creation
+        foreach ($orderItems as $item) {
+            $this->reduceQuantity($item['id'], $item['quantity']);
+        }
+
+        return $sale;
+
+    }
+
+
+    private function creditOrderProcess(array $orderData, array $orderItemData, array $orderItems)
+    {
+
+
+        //total amount 
+        $total = round($orderData['subtotal'] - $orderData['discount'], 2);
+
+        $credit = Credit::create([
+            'user_id' => $orderData['user_id'],
+            'customer_id' => $orderData['customer_id'],
+            'discount' => $orderData['discount'],
+            'subtotal' => $orderData['subtotal'],
+            'total_amount' => $total,
+            'reference' => $orderData['reference'],
+        ]);
+
+
+
+        // Attach order ID to each order item
+        foreach ($orderItemData as &$item) {
+            $item['credit_id'] = $credit->id;
+        }
+
+        // Create all order items
+        $credit->creditItems()->createMany($orderItemData);
+
+
+        // Reduce stock only after successful item creation
+        foreach ($orderItems as $item) {
+            $this->reduceQuantity($item['id'], $item['quantity']);
+        }
+
+
+        return $credit;
     }
 
     public function printReceipt($id)
@@ -208,6 +288,44 @@ class ShopController extends Controller
             $dynamicHeight = $baseHeight + ($sale->sale_items_count * $itemHeight);
 
             $pdf = FacadePdf::loadView('pages.shop.receipt', [
+                'sale' => $sale,
+                'company' => $company,
+
+            ])->setPaper([0, 0, 227, $dynamicHeight], 'portrait');
+
+            return $pdf->download('order-' . $sale->reference . '.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function printCreditReceipt($id)
+    {
+        try {
+
+            $saleId = $id;
+            $store_id = auth()->user()->store_id;
+            $company = Company::first();
+
+            $sale = Credit::with(['creditItems', 'store', 'customer', 'user'])
+                ->withCount('creditItems')
+                ->where('id', $saleId)
+                ->where('store_id', $store_id)
+                ->first();
+
+
+
+
+            //   $orderData = Order::find($id);
+            //   $branch = Branch::find($branch_id);
+
+            // dd($orderProductsData->product);
+            // Calculate paper height dynamically
+            $baseHeight = 360; // Base height for fixed elements
+            $itemHeight = 40;  // Estimated height per item
+            $dynamicHeight = $baseHeight + ($sale->credit_items_count * $itemHeight);
+
+            $pdf = FacadePdf::loadView('pages.shop.credit-receipt', [
                 'sale' => $sale,
                 'company' => $company,
 
@@ -341,6 +459,17 @@ class ShopController extends Controller
             where('store_id', auth()->user()->store_id)
             ->where('item_id', $itemId)
             ->update(['quantity' => DB::raw('quantity - ' . $quantity)]);
+    }
+
+    private function userShift()
+    {
+
+        $userId = auth()->id();
+
+        $shift = Shift::where('user_id', $userId)->latest('id')->value('id');
+
+        return $shift;
+
     }
 
     public function get_end_day_cookie()

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Report;
 
-use App\Models\Sale;
+use App\Http\Controllers\Controller;
 use App\Models\ReturnItem;
+use App\Models\Sale;
+use App\Models\Shift;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 
 class SaleReportController extends Controller
 {
@@ -129,6 +130,64 @@ class SaleReportController extends Controller
             'hourSales' => $finalPerHour,
             'itemReturnedSum' => $itemReturnedSum,
         ]);
+    }
+
+    public function saleShift(Request $request)
+    {
+
+        $validated = $request->validate([
+            'date_range' => 'required',
+        ]);
+
+        [$startDate, $endDate] = $this->parseDateRange($validated['date_range']);
+
+        $perPage = $request->query('per_page', 10);
+        $page = $request->query('page', 1);
+
+        $orders = Shift::with('user')->where('status', '=', 'closed');
+
+
+
+        if ($startDate && $endDate) {
+            $orders->whereDate('created_at', '>=', $startDate)
+                ->whereDate('created_at', '<=', $endDate);
+        }
+
+
+        $orders = $orders->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'orders' => $orders->items(),
+            'current_page' => $orders->currentPage(),
+            'last_page' => $orders->lastPage(),
+            'total' => $orders->total(),
+            'per_page' => $orders->perPage(),
+        ], 200);
+    }
+
+    protected function parseDateRange(?string $dateRange): array
+    {
+        if (!$dateRange) {
+            return [null, null];
+        }
+
+        $dates = explode('to', $dateRange);
+
+        if (count($dates) < 2) {
+            return [null, null];
+        }
+
+        $startDate = trim($dates[0]);
+        $endDate = trim($dates[1]);
+
+        try {
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        } catch (\Exception $e) {
+            return [null, null];
+        }
+
+        return [$startDate, $endDate];
     }
 
     private function getDates($period)

@@ -57,7 +57,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     });
 
-    Route::controller(ShiftController::class)->middleware('can:shift.menu')->prefix('shift')->name('shift.')->group(function () {
+    Route::controller(ShiftController::class)->prefix('shift')->name('shift.')->group(function () {
         Route::get('/index', 'index')->name('index');
         Route::post('/store', 'openShift')->name('store');
         Route::put('/update/{shift}', 'closeShift')->name('update');
@@ -71,6 +71,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/price-edit', 'priceEdit')->name('price.edit');
         Route::post('/place-order', 'placeOrder')->name('store');
         Route::get('/print-receipt/{id}', 'printReceipt')->name('receipt');
+        Route::get('/print-credit-receipt/{id}', 'printCreditReceipt')->name('credit.receipt');
 
         //hold item
         Route::post('/hold-item', 'holdItem')->name('hold.item');
@@ -283,6 +284,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/customer', 'customer')->name('customer.index');
         Route::get('/customer-purchase/{customer}', 'purchaseHistory')->name('customer.purchase');
         Route::get('/warehouse', 'warehouse')->name('warehouse');
+        Route::get('/shift', 'shift')->name('shift');
     });
 
     Route::controller(SaleReportController::class)->middleware('can:report')->prefix('report')->name('report.')->group(function () {
@@ -293,6 +295,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/get-summary', 'get_analytics')->name('sale.get.analytics');
         Route::get('/sales-trends', 'salesTrends')->name('sale.trends');
         Route::get('/item-sales', 'itemSales')->name('sale.items');
+        Route::get('/shift-request', 'saleShift')->name('saleShift');
+        Route::get('/shift-detail', 'saleShiftDetail')->name('saleShiftDetail');
     });
 
     Route::controller(ItemReportController::class)->middleware('can:report')->prefix('report')->name('report.')->group(function () {

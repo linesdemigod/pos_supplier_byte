@@ -57,6 +57,7 @@ class CreditController extends Controller
 
     public function creditDetail(Customer $customer)
     {
+
         return view('pages.credit.detail', [
             'customer' => $customer
         ]);

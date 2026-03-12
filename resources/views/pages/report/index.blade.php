@@ -64,6 +64,8 @@
                                     <ul>
                                         <li><a href="{{ route('report.staff.sales') }}" class="">User Sales</a>
                                         </li>
+                                        <li><a href="{{ route('report.shift') }}" class="">User Shift</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>

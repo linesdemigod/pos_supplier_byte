@@ -25,11 +25,14 @@ class ShiftController extends Controller
         return view('pages.shift.index', compact('shift', 'shiftTotal'));
     }
 
-    public function openShift()
+    public function openShift(Request $request)
     {
+        $validated = $request->validate([
+            'opening_cash' => ['required', 'regex:/^\d+(\.\d+)?$/'],
+        ]);
 
         $userId = auth()->id();
-        $existingShift = Shift::where('user_id', $userId)->whereNull('end_time')->first();
+        $existingShift = Shift::where('user_id', $userId)->whereNull('closed_at')->first();
 
         if ($existingShift) {
             return back()->with('error', 'You already have an open shift.');
@@ -38,18 +41,18 @@ class ShiftController extends Controller
 
         Shift::create([
             'user_id' => $userId,
-            'start_time' => now(),
-            'end_time' => null,
-            'total_sales' => null
+            'opened_at' => now(),
+            'opening_cash' => $validated['opening_cash'],
         ]);
 
         return back()->with('message', 'Shift opened successfully');
     }
 
-    public function closeShift(Shift $shift)
+    public function closeShift(Request $request, Shift $shift)
     {
-        //protect shift
-        // Gate::authorize('update', $shift);
+        $validated = $request->validate([
+            'closing_cash' => ['required', 'regex:/^\d+(\.\d+)?$/'],
+        ]);
 
         //disallow closing of shift if user's shift orders are not paid
         $unpaidOrdersCount = Sale::where('shift_id', $shift->id)
@@ -62,14 +65,20 @@ class ShiftController extends Controller
 
 
         $shiftTotal = Sale::where('shift_id', $shift->id)
-            ->where('status', 'active')
-            ->sum('amount_paid');
+            ->where('payment_status', 'paid')
+            ->sum('grandtotal');
+
+
+        //calculate cash difference
+        $cashDifference = ($shift->opening_cash + $shiftTotal) - $validated['closing_cash'];
 
 
         $updateShift = $shift->update([
-            'end_time' => now(),
-            'total_sales' => $shiftTotal ?? 0,
-            'status' => 'closed'
+            'closed_at' => now(),
+            'expected_cash' => $shiftTotal ?? 0,
+            'status' => 'closed',
+            'closing_cash' => $validated['closing_cash'],
+            'cash_difference' => $cashDifference,
         ]);
 
         return back()->with('message', 'Shift closed successfully');

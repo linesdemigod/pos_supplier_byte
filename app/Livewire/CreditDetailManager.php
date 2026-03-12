@@ -92,7 +92,8 @@ class CreditDetailManager extends Component
     public function render()
     {
 
-        $credits = Credit::where('customer_id', $this->customerId)
+        $credits = Credit::with('user')
+            ->where('customer_id', $this->customerId)
             ->date($this->search)
             ->latest()
             ->paginate($this->perPage);

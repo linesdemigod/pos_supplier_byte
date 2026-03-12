@@ -14,70 +14,118 @@
             </div>
         </div>
     </section>
-    <section class="container">
-        <div class="row">
+    {{-- force user to closed shift the next day if the user didn't close previous day shift --}}
+    @if ($shift == null || $shift->status === 'closed' || $forceCloseShift)
+        <div class="justify-content-center d-flex">
 
-            <div class="col-xxl-12">
-                <div class="card border">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-2">
-                                <div class="flex-grow-1 pe-2">
-                                    <p class="fw-bold fs-3">Sales Point</p>
-                                </div>
-                                {{-- <div class="pe-2">
+            <div class="card" style="width: 40rem">
+                <div class="card-body">
+                    @if ($forceCloseShift)
+                        <p class="fs-3 text-danger mb-0">Previous Shift Not Closed</p>
+                        <p>You must close yesterday's shift before starting a new one.</p>
+
+                        <form action="{{ route('shift.update', $shift->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="col-xxl-6 mb-3">
+                                <label for="name" class="form-label">Closing Cash</label>
+
+                                <input type="number" name="closing_cash" id="discount" class="form-control discount"
+                                    value="0">
+                                @error('closing_cash')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Are you sure you want to close shift?');">Close Previous
+                                Shift</button>
+                        </form>
+                    @else
+                        <p class="fs-3 mb-0">Shift is closed</p>
+                        <p>Open a shift to perform sales</p>
+
+                        <form action="{{ route('shift.store') }}" method="POST">
+                            @csrf
+                            <div class="col-xxl-12 mb-3">
+                                <label for="name" class="form-label">Starting Cash</label>
+
+                                <input type="number" name="opening_cash" id="discount" class="form-control discount"
+                                    value="0">
+                                @error('opening_cash')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <button type="submit" class="btn btn-primary">Open Shift</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @else
+        <section class="container">
+            <div class="row">
+
+                <div class="col-xxl-12">
+                    <div class="card border">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="flex-grow-1 pe-2">
+                                        <p class="fw-bold fs-3">Sales Point</p>
+                                    </div>
+                                    {{-- <div class="pe-2">
                                     <a href="#" class="btn btn-secondary rounded-3" data-bs-toggle="tooltip"
                                         data-bs-placement="top" data-bs-title="Orders"><i
                                             class="fa-solid fa-wand-magic-sparkles"></i>
                                         Today
                                         Sales</a>
                                 </div> --}}
-                                <div class="pe-2">
-                                    <button type="button" class="btn btn-secondary rounded-3" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal"><i class="fas fa-users"></i> Add
-                                        Customer</button>
-                                </div>
-                                <div class="">
+                                    <div class="pe-2">
+                                        <button type="button" class="btn btn-secondary rounded-3" data-bs-toggle="modal"
+                                            data-bs-target="#exampleModal"><i class="fas fa-users"></i> Add
+                                            Customer</button>
+                                    </div>
+                                    <div class="">
 
-                                    <button type="button" class="btn btn-secondary rounded-3" data-bs-toggle="modal"
-                                        id="show-hold-item" data-bs-target="#holdModal"><i class="fas fa-unlock"></i>
-                                        Show
-                                        Hold Sale</button>
+                                        <button type="button" class="btn btn-secondary rounded-3" data-bs-toggle="modal"
+                                            id="show-hold-item" data-bs-target="#holdModal"><i class="fas fa-unlock"></i>
+                                            Show
+                                            Hold Sale</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- search item --}}
-                        <div class="row mb-3">
-                            <div class="col-xxl-6 mb-2">
-                                <div class="item-search-container">
-                                    <label for="form-label">Search Item</label>
-                                    <input type="text" name="item" class="form-control" id="item-search"
-                                        autocomplete="off" placeholder="Start typing a item...">
-                                    <ul id="suggestions" class="autocomplete-list">
-                                    </ul>
+                            {{-- search item --}}
+                            <div class="row mb-3">
+                                <div class="col-xxl-6 mb-2">
+                                    <div class="item-search-container">
+                                        <label for="form-label">Search Item</label>
+                                        <input type="text" name="item" class="form-control" id="item-search"
+                                            autocomplete="off" placeholder="Start typing a item...">
+                                        <ul id="suggestions" class="autocomplete-list">
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-xxl-3 mb-2">
-                                <div class="">
-                                    <label for="form-label">Category</label>
-                                    <select name="category_id" id="category-search" class="form-select select_box">
-                                        @unless (count($categories) == 0)
-                                            <option value="0">All</option>
-                                            @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}">{{ Str::Title($category->name) }}
-                                                </option>
-                                            @endforeach
-                                        @else
-                                            <option value="">No Category</option>
-                                        @endunless
-                                    </select>
+                                <div class="col-xxl-3 mb-2">
+                                    <div class="">
+                                        <label for="form-label">Category</label>
+                                        <select name="category_id" id="category-search" class="form-select select_box">
+                                            @unless (count($categories) == 0)
+                                                <option value="0">All</option>
+                                                @foreach ($categories as $category)
+                                                    <option value="{{ $category->id }}">{{ Str::Title($category->name) }}
+                                                    </option>
+                                                @endforeach
+                                            @else
+                                                <option value="">No Category</option>
+                                            @endunless
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-xxl-3 mb-2">
-                                <div class="">
-                                    <label for="form-label">Search Customer</label>
-                                    {{-- <select name="customer_id" id="customer-search" class="form-select element_select">
+                                <div class="col-xxl-3 mb-2">
+                                    <div class="">
+                                        <label for="form-label">Search Customer</label>
+                                        {{-- <select name="customer_id" id="customer-search" class="form-select element_select">
                                         @unless (count($customers) == 0)
                                             <option value="">-- select customer --</option>
                                             @foreach ($customers as $customer)
@@ -87,92 +135,98 @@
                                             <option value="">No Customer</option>
                                         @endunless
                                     </select> --}}
-                                    <input type="text" name="item" class="form-control" id="customer-search"
-                                        placeholder="Start typing customer name or phone...">
-                                    <ul id="customer-suggestions" class="autocomplete-list">
-                                    </ul>
+                                        <input type="text" name="item" class="form-control" id="customer-search"
+                                            placeholder="Start typing customer name or phone...">
+                                        <ul id="customer-suggestions" class="autocomplete-list">
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        {{-- end search item --}}
+                            {{-- end search item --}}
 
-                        {{-- customer details --}}
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-end align-items-center gap-2">
-                                <p class="fw-bold">Customer:</p>
-                                <div class="d-flex align-items-center gap-2" id="customer-container">
+                            {{-- customer details --}}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <p class="fw-bold">Customer:</p>
+                                    <div class="d-flex align-items-center gap-2" id="customer-container">
+
+                                    </div>
 
                                 </div>
 
-                            </div>
-                        </div>
-
-                        {{-- cart table --}}
-                        <div class="table-responsive" data-simplebar style="max-height: 400px">
-                            <table class="table-centered table">
-                                <thead class="table-secondary">
-                                    <tr>
-                                        <th class="d-none">ID</th>
-                                        <th>Item</th>
-                                        <th>Price</th>
-                                        <th>Quantity</th>
-                                        <th>Total</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cart-table">
-
-                                </tbody>
-                            </table>
-                        </div>
-                        {{-- calculation --}}
-                        <div class="m-3">
-                            <div class="row g-1 justify-content-end mb-2">
-                                <div class="col-auto">
-                                    <label for="inputPassword6" class="col-form-label">Subtotal</label>
-                                </div>
-                                <!-- gross -->
-                                <div class="col-auto">
-                                    <input type="text" name="gross" id="total-subtotal" class="form-control gross"
-                                        readonly="">
+                                <div>
+                                    Credit customer: <input type="checkbox" class="form-check-input" name="credit"
+                                        id="credit-customer">
                                 </div>
                             </div>
-                            <div class="row g-3 justify-content-end mb-2">
-                                <div class="col-auto">
-                                    <label for="discount" class="col-form-label">Discount</label>
+
+                            {{-- cart table --}}
+                            <div class="table-responsive" data-simplebar style="max-height: 400px">
+                                <table class="table-centered table">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th class="d-none">ID</th>
+                                            <th>Item</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Total</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-table">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            {{-- calculation --}}
+                            <div class="m-3">
+                                <div class="row g-1 justify-content-end mb-2">
+                                    <div class="col-auto">
+                                        <label for="inputPassword6" class="col-form-label">Subtotal</label>
+                                    </div>
+                                    <!-- gross -->
+                                    <div class="col-auto">
+                                        <input type="text" name="gross" id="total-subtotal"
+                                            class="form-control gross" readonly="">
+                                    </div>
                                 </div>
-                                <!-- discount -->
-                                <div class="col-auto">
-                                    <input type="number" name="discount" id="discount" class="form-control discount"
-                                        value="0" min="0" oninput="validity.valid||(value='');">
+                                <div class="row g-3 justify-content-end mb-2">
+                                    <div class="col-auto">
+                                        <label for="discount" class="col-form-label">Discount</label>
+                                    </div>
+                                    <!-- discount -->
+                                    <div class="col-auto">
+                                        <input type="number" name="discount" id="discount"
+                                            class="form-control discount" value="0" min="0"
+                                            oninput="validity.valid||(value='');">
+                                    </div>
+                                </div>
+                                <div class="row g-3 justify-content-end mb-2">
+                                    <div class="col-auto">
+                                        <label for="net" class="col-form-label">Total</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="text" id="total-grandtotal" name="net"
+                                            class="form-control net-total" readonly="">
+
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row g-3 justify-content-end mb-2">
-                                <div class="col-auto">
-                                    <label for="net" class="col-form-label">Total</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="total-grandtotal" name="net"
-                                        class="form-control net-total" readonly="">
 
-                                </div>
+
+                            {{-- button --}}
+                            <div class="d-flex justify-content-end gap-2">
+                                <button class="btn btn-primary" id="place-order"><i class="fas fa-receipt"></i>
+                                    Order</button>
+                                <button class="btn btn-secondary" id="hold-order"><i class="fas fa-lock"></i> Hold
+                                    Sale</button>
+                                <button class="btn btn-danger" id="clear-cart"><i class="fas fa-trash-alt"></i>
+                                    Clear</button>
                             </div>
-                        </div>
-
-
-                        {{-- button --}}
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-primary" id="place-order"><i class="fas fa-receipt"></i>
-                                Order</button>
-                            <button class="btn btn-secondary" id="hold-order"><i class="fas fa-lock"></i> Hold
-                                Sale</button>
-                            <button class="btn btn-danger" id="clear-cart"><i class="fas fa-trash-alt"></i>
-                                Clear</button>
                         </div>
                     </div>
                 </div>
-            </div>
-            {{-- <div class="col-xxl-4">
+                {{-- <div class="col-xxl-4">
                 <div class="card border-1 border-muted border">
                     <div class="card-body">
 
@@ -182,17 +236,17 @@
                 </div>
             </div> --}}
 
-        </div>
+            </div>
 
 
-    </section>
+        </section>
 
-    {{-- modal --}}
-    <x-dom.customer-modal />
+        {{-- modal --}}
+        <x-dom.customer-modal />
 
-    <x-dom.hold-modal />
+        <x-dom.hold-modal />
 
-    {{-- @php
+        {{-- @php
         use Carbon\Carbon;
 
         $todayDate = date('Y-m-d');
@@ -218,5 +272,5 @@
             @endif
         @endif
     </div> --}}
-
+    @endif
 @endsection
