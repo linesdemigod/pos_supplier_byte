@@ -174,7 +174,48 @@
 
                     </a>
                 </li>
+                {{-- <li @class([
+                    'nav-item',
+                    'active' => Str::startsWith(request()->route()->getName(), 'cash_movement'),
+                ])>
+                    <a href="{{ route('cash_movement.index') }}">
+                        <i class="fas fa-dollar-sign"></i>
+                        <p>Cash Movement</p>
 
+                    </a>
+                </li> --}}
+                @can('cash_movement.menu')
+                    <li @class([
+                        'nav-item',
+                        'active submenu' => Str::startsWith(request()->route()->getName(), [
+                            'cash_movement',
+                        ]),
+                    ])>
+                        <a data-bs-toggle="collapse" href="#cashMovement">
+                            <i class="fas fa-dollar-sign"></i>
+                            <p>Cash Movement</p>
+                            <span class="caret"></span>
+                        </a>
+                        <div id="cashMovement" @class([
+                            'collapse',
+                            'show' => Str::startsWith(request()->route()->getName(), ['cash_movement']),
+                        ])>
+                            <ul class="nav nav-collapse">
+
+                                <li @class([
+                                    'active' => Str::startsWith(
+                                        request()->route()->getName(),
+                                        'cash_movement.index'),
+                                ])>
+                                    <a href="{{ route('cash_movement.index') }}">
+                                        <span class="sub-item">Expense</span>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </li>
+                @endcan
                 @can('inventory.menu')
                     <li @class([
                         'nav-item',

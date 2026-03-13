@@ -20,7 +20,8 @@ class Credit extends Model
         'discount',
         'total_tax_amount',
         'reference',
-        'status'
+        'status',
+        'shift_id',
     ];
 
     public function user()

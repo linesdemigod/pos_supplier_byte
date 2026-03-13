@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Credit;
 use App\Models\Customer;
 use App\Models\Repayment;
+use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -151,75 +152,6 @@ class CreditController extends Controller
     }
 
 
-    //request to get customer all repayment
-    // public function fetchRepayment(Request $request)
-    // {
-    //     $customer_id = $request->customerId;
-    //     $perPage = $request->query('per_page', 10);
-    //     $page = $request->query('page', 1);
-
-    //     // Get the customer
-    //     $customer = Customer::find($customer_id);
-
-    //     if (!$customer) {
-    //         return response()->json(['message' => 'Customer not found'], 404);
-    //     }
-
-    //     // Get payments for the customer's credit orders
-    //     // $repayments = Payment::whereHas('order', function ($query) use ($customer_id) {
-    //     //     $query->where('customer_id', $customer_id)
-    //     //         ->where('payment_status', 'credit')
-    //     //         ->where('store_id', auth()->user()->store_id);
-    //     // })
-
-    //     // $repayments = RepaymentHistory::where('customer_id', $customer_id)
-    //     //     ->where('store_id', auth()->user()->store_id)
-    //     //     ->latest()
-    //     //     ->paginate($perPage, ['*'], 'page', $page);
-    //     // $repayments = RepaymentHistory::where('customer_id', $customer_id)
-    //     //     ->where('store_id', auth()->user()->store_id)
-    //     //     ->select(DB::raw('DATE(created_at) as created_at'), DB::raw('SUM(amount_paid) as amount_paid'))
-    //     //     ->groupBy('created_at')
-    //     //     ->orderBy('created_at', 'desc')
-    //     //     ->paginate($perPage, ['*'], 'page', $page);
-
-    //     $repayments = RepaymentHistory::where('customer_id', $customer_id)
-    //         ->where('store_id', auth()->user()->store_id)
-    //         ->whereHas('repayment', function ($q) {
-    //             $q->where('payment_status', 'paid');
-    //         })
-    //         ->select(
-    //             'batch_id',
-    //             DB::raw('SUM(amount_paid) as amount_paid'),
-    //             DB::raw('MIN(created_at) as created_at') // earliest timestamp of the batch
-    //         )
-    //         ->groupBy('batch_id')
-    //         ->orderBy('created_at', 'desc')
-    //         ->paginate($perPage, ['*'], 'page', $page);
-
-
-    //     // Calculate customer outstanding balance
-    //     $outstanding = Credit::where('customer_id', $customer_id)
-    //         ->where('status', 'credit')
-    //         ->where('store_id', auth()->user()->store_id)
-    //         ->sum('total_amount')
-    //         - Repayment::whereHas('credit', function ($query) use ($customer_id) {
-    //             $query->where('customer_id', $customer_id)
-    //                 ->whereIn('status', ['credit', 'partial'])
-    //                 ->where('store_id', auth()->user()->store_id);
-    //         })->sum('amount_paid');
-
-    //     return response()->json([
-    //         'repayments' => $repayments->items(),
-    //         'current_page' => $repayments->currentPage(),
-    //         'last_page' => $repayments->lastPage(),
-    //         'total' => $repayments->total(),
-    //         'per_page' => $repayments->perPage(),
-    //         'customer' => $customer,
-    //         'outstanding' => $outstanding
-    //     ], 200);
-    // }
-
     //pay repayment
     public function payRepayment(Request $request)
     {
@@ -235,6 +167,7 @@ class CreditController extends Controller
 
         $now = now();
         $user = auth()->user();
+        $shiftId = $this->userShift();
 
         $customer = Customer::find($customerId);
         if (!$customer) {
@@ -313,17 +246,9 @@ class CreditController extends Controller
                     'payment_method' => $paymentMethod,
                     'customer_id' => $customerId,
                     'reference' => $reference,
-                    'date_paid' => now()
+                    'date_paid' => now(),
+                    'shift_id' => $shiftId,
                 ]);
-
-                // //insert to repayment History
-                // RepaymentHistory::create([
-                //     'customer_id' => $customerId,
-                //     'store_id' => $user->store_id,
-                //     'amount_paid' => $payment->amount_paid,
-                //     'repayment_id' => $payment->id,
-                //     'batch_id' => $batchId,
-                // ]);
 
 
                 $remainingAmount -= $paymentToApply;
@@ -438,6 +363,17 @@ class CreditController extends Controller
         return view('pages.credit.show-credit', [
             'sale' => $order,
         ]);
+    }
+
+    private function userShift()
+    {
+
+        $userId = auth()->id();
+
+        $shift = Shift::where('user_id', $userId)->latest('id')->value('id');
+
+        return $shift;
+
     }
 
     protected function parseDateRange(?string $dateRange): array

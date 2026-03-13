@@ -65,6 +65,7 @@ class CategoryTable extends Component
             search($this->search)
             ->latest()
             ->paginate($this->perPage);
+
         return view('livewire.category-table', [
             'categories' => $categories,
         ]);

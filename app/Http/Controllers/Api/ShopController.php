@@ -10,6 +10,7 @@ use App\Models\Item;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalesPointPermission;
+use App\Models\Shift;
 use App\Models\StoreInventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,6 +110,7 @@ class ShopController extends Controller
         $discount = $request->discount;
         $customer = $request->customer;
         $isCredit = $request->credit;
+        $shiftId = $this->userShift();
 
 
         DB::beginTransaction();
@@ -123,6 +125,7 @@ class ShopController extends Controller
                 'customer_id' => $customer,
                 'payment_method' => 'cash',
                 'payment_status' => 'paid',
+                'shift_id' => $shiftId,
             ];
 
             $saleItemData = [];
@@ -229,6 +232,7 @@ class ShopController extends Controller
             'subtotal' => $orderData['subtotal'],
             'total_amount' => $total,
             'reference' => $orderData['reference'],
+            'shift_id' => $orderData['shift_id'],
         ]);
 
 
@@ -274,6 +278,17 @@ class ShopController extends Controller
             'orderItems' => $orders,
             'orderTaxes' => [],
         ]);
+    }
+
+    private function userShift()
+    {
+
+        $userId = auth()->id();
+
+        $shift = Shift::where('user_id', $userId)->latest('id')->value('id');
+
+        return $shift;
+
     }
 
 

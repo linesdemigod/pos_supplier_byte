@@ -239,6 +239,7 @@ class ShopController extends Controller
             'subtotal' => $orderData['subtotal'],
             'total_amount' => $total,
             'reference' => $orderData['reference'],
+            'shift_id' => $orderData['shift_id'],
         ]);
 
 

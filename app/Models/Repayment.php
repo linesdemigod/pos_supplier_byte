@@ -22,7 +22,8 @@ class Repayment extends Model
         'payment_status',
         'reference',
         'payment_method',
-        'customer_id'
+        'customer_id',
+        'shift_id'
     ];
 
     public function credit()

@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('repayments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onUpdate('cascade')->onDelete('set null');
-            $table->foreignId('credit_id')->nullable()->constrained()->onUpdate('cascade')->onDelete('set null');
+            $table->foreignId('credit_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('store_id')->nullable()->constrained()->onUpdate('cascade')->onDelete('set null');
             $table->foreignId('customer_id')->nullable()->constrained()->onUpdate('cascade')->onDelete('set null');
             $table->dateTime('date_paid');

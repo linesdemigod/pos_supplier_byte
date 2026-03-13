@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
         //     TimeRestrictionSeeder::class,
         //     SalesPointPermissionSeeder::class
         //     NewRolePermissionSeeder::class
+        //     CashMovementPermissionSeeder::class
         // ]);
 
 

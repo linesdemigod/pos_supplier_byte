@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CashMovementController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CreditController;
@@ -276,6 +277,18 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/index', 'index')->middleware('can:sale.menu')->name('index');
         Route::get('/show/{sale}', 'show')->middleware('can:sale.show')->name('show');
         Route::get('/print/{id}', 'printReceipt')->middleware('can:sale.print')->name('print');
+    });
+
+    Route::controller(CashMovementController::class)->middleware('can:cash_movement.menu')->prefix('cash-movement')->name('cash_movement.')->group(function () {
+        Route::get('/index', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+
+        //approval
+        Route::get('/approval', 'approval')->name('approval');
+        Route::get('/edit/{record}/edit', 'edit')->name('edit');
+        Route::put('/edit/{record}', 'update')->name('update');
+
     });
 
     Route::controller(ReportController::class)->middleware('can:report')->prefix('report')->name('report.')->group(function () {
