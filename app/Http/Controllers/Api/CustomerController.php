@@ -42,7 +42,7 @@ class CustomerController extends Controller
 
         Customer::create($validated);
 
-        return response()->json(['message' => 'Customer created successfully'], 201);
+        return response()->json(['message' => 'Customer created successfully'], 200);
     }
 
     public function update(Request $request, $id)

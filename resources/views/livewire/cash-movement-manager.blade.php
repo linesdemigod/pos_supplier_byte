@@ -86,11 +86,11 @@
 
                                         @can('cash_movement.delete')
                                             <button
-                                                onclick="return confirm('Are you sure you want to delete?') ||
+                                                onclick="return confirm('Are you sure you want to reject?') ||
                               event.stopImmediatePropagation()"
                                                 wire:click="delete({{ $record->id }})"
                                                 class="btn btn-danger action-icon text-white">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-thumbs-down"></i>
                                             </button>
                                         @endcan
 

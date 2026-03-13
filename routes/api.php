@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CashMovementController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CreditController;
 use App\Http\Controllers\Api\CustomerController;
@@ -114,6 +115,11 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::put('/close-shift/{id}', 'closeShift');
     });
 
+    Route::controller(CashMovementController::class)->group(function () {
+        Route::get('/get-cash-movement', 'index')->name('index');
+        Route::post('/store-cash-movement', 'store')->name('store');
+
+    });
 
 
 });

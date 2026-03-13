@@ -33,14 +33,19 @@ class CashMovementManager extends Component
 
 
             // delete it
-            $cashMovement->delete();
+            $cashMovement->update(
+                [
+                    'status' => 'rejected',
+                    'updated_at' => now(),
+                ]
+            );
 
             // Prepare audit trail data
             $auditTrail = [
                 'user_id' => auth()->id(),
                 'store_id' => auth()->user()->store_id,
                 'ip_address' => request()->ip(),
-                'description' => 'cash Movement deletion',
+                'description' => 'cash Movement Rejection',
                 'data_before' => json_encode($originalData),
                 'data_after' => json_encode([]),
                 'created_at' => now(),
