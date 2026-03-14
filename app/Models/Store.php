@@ -21,6 +21,10 @@ class Store extends Model
 
         return $this->hasMany(Customer::class);
     }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     public function itemRequest()
     {

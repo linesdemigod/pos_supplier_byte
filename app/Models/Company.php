@@ -16,5 +16,10 @@ class Company extends Model
         'address',
     ];
 
+    public function stores()
+    {
+        return $this->hasMany(Store::class);
+    }
+
 
 }

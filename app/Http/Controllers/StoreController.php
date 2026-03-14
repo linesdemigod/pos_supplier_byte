@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\Store;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
@@ -37,6 +38,8 @@ class StoreController extends Controller
         $user = auth()->user();
         $storeId = $user->store_id;
         $userId = $user->id;
+        $companyId = Company::first()->id;
+        $validate['company_id'] = $companyId;
 
         DB::beginTransaction();
         try {
@@ -59,7 +62,7 @@ class StoreController extends Controller
             DB::commit();
             return back()->with('message', 'store added successfully');
         } catch (\Exception $e) {
-            Db::rollBack();
+            DB::rollBack();
             return back()->with('error', 'Error adding store');
         }
 
@@ -85,6 +88,8 @@ class StoreController extends Controller
 
         // Get the original data before the update
         $originalData = $store->getOriginal();
+        $companyId = Company::first()->id;
+        $validate['company_id'] = $companyId;
 
         DB::beginTransaction();
         try {

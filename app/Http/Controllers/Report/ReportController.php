@@ -76,6 +76,7 @@ class ReportController extends Controller
         ]);
     }
 
+
     private function getCurrentMonthRange(): array
     {
         // $startOfMonth = Carbon::now()->startOfMonth();

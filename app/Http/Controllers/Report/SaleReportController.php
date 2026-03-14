@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers\Report;
 
+use App\Exports\ReportItemSummaryExport;
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\ReturnItem;
 use App\Models\Sale;
 use App\Models\Shift;
+use App\Models\Store;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SaleReportController extends Controller
 {
@@ -163,6 +168,97 @@ class SaleReportController extends Controller
             'total' => $orders->total(),
             'per_page' => $orders->perPage(),
         ], 200);
+    }
+
+
+    public function itemSummary()
+    {
+
+        return view('pages.report.sales.item-summary');
+    }
+
+    public function exportItemSummarys(Request $request)
+    {
+        $request->validate([
+            'start' => 'required',
+            'end' => 'required',
+        ]);
+
+        $from = Carbon::parse($request->start)->startOfDay();
+        $to = Carbon::parse($request->end)->endOfDay();
+
+        $storeId = auth()->user()->store_id;
+
+        $records = DB::table('sales')
+            ->select(
+                DB::raw('SUM(sale_items.quantity) AS quantity'),
+                'items.price AS price',
+                DB::raw('SUM(sale_items.total) AS subtotal'),
+                'items.name AS name',
+                'items.id AS itemId'
+            )
+            ->leftJoin('sale_items', 'sales.id', '=', 'sale_items.sale_id')
+            ->leftJoin('items', 'sale_items.item_id', '=', 'items.id')
+            ->where('sales.store_id', $storeId)
+            ->where('sales.payment_status', 'paid')
+            ->whereBetween('sale_items.created_at', [$from, $to])
+            ->groupBy('name', 'items.id', 'price')
+            ->orderBy('sale_items.created_at', 'DESC')
+            ->get();
+
+        return Excel::download(new ReportItemSummaryExport($records), 'item-sales-summary.csv');
+
+    }
+
+    public function exportItemSummary(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'start' => 'required',
+                'end' => 'required',
+            ]);
+
+            $from = Carbon::parse($request->start)->startOfDay();
+            $to = Carbon::parse($request->end)->endOfDay();
+
+            $storeId = auth()->user()->store_id;
+
+            $store = Store::with('company')
+                ->where('id', $storeId)
+                ->first();
+
+            $records = DB::table('sales')
+                ->select(
+                    DB::raw('SUM(sale_items.quantity) AS quantity'),
+                    'items.price AS price',
+                    DB::raw('SUM(sale_items.total) AS subtotal'),
+                    'items.name AS name',
+                    'items.id AS itemId'
+                )
+                ->leftJoin('sale_items', 'sales.id', '=', 'sale_items.sale_id')
+                ->leftJoin('items', 'sale_items.item_id', '=', 'items.id')
+                ->where('sales.store_id', $storeId)
+                ->where('sales.payment_status', 'paid')
+                ->whereBetween('sale_items.created_at', [$from, $to])
+                ->groupBy('name', 'items.id', 'price')
+                ->orderBy('sale_items.created_at', 'DESC')
+                ->get();
+
+
+
+            $pdf = FacadePdf::loadView('pages.report.exports.item-summary', [
+                'records' => $records,
+                'store' => $store,
+                'from' => $from,
+                'to' => $to,
+
+            ])->setPaper('A4', 'portrait');
+
+            return $pdf->download('item-summary.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     protected function parseDateRange(?string $dateRange): array

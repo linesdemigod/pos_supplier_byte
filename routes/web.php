@@ -298,6 +298,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/customer-purchase/{customer}', 'purchaseHistory')->name('customer.purchase');
         Route::get('/warehouse', 'warehouse')->name('warehouse');
         Route::get('/shift', 'shift')->name('shift');
+
+
     });
 
     Route::controller(SaleReportController::class)->middleware('can:report')->prefix('report')->name('report.')->group(function () {
@@ -310,6 +312,9 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('/item-sales', 'itemSales')->name('sale.items');
         Route::get('/shift-request', 'saleShift')->name('saleShift');
         Route::get('/shift-detail', 'saleShiftDetail')->name('saleShiftDetail');
+
+        Route::get('/item-summary', 'itemSummary')->name('item.summary');
+        Route::get('/export-item-summary', 'exportItemSummary')->name('export.item.summary');
     });
 
     Route::controller(ItemReportController::class)->middleware('can:report')->prefix('report')->name('report.')->group(function () {

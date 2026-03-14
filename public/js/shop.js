@@ -58,7 +58,7 @@ document.addEventListener("click", function (event) {
 
 if (pageId === "shop") {
     let creditCustomer = false;
-    const itemInput = document.querySelector("#item-search");
+    const itemInput = document?.querySelector("#item-search");
     const suggestionsList = document.querySelector("#suggestions");
     const customerSuggestionsList = document.querySelector(
         "#customer-suggestions"
@@ -94,7 +94,7 @@ if (pageId === "shop") {
         return formattedDate;
     }
 
-    itemInput.addEventListener("keyup", debounce(searchItem, 300));
+    itemInput?.addEventListener("keyup", debounce(searchItem, 300));
 
     async function searchItem() {
         try {
@@ -121,7 +121,7 @@ if (pageId === "shop") {
 
     //search customer
     const customerInput = document.querySelector("#customer-search");
-    customerInput.addEventListener("keyup", debounce(searchCustomer, 300));
+    customerInput?.addEventListener("keyup", debounce(searchCustomer, 300));
 
     async function searchCustomer() {
         try {
@@ -411,7 +411,7 @@ if (pageId === "shop") {
     });
 
     //clear cart
-    document.querySelector("#clear-cart").addEventListener("click", () => {
+    document?.querySelector("#clear-cart")?.addEventListener("click", () => {
         Swal.fire({
             title: "Are you sure you want to clear the cart?",
             icon: "success",
@@ -430,7 +430,7 @@ if (pageId === "shop") {
 
     //place order
     const placeOrderBtn = document.querySelector("#place-order");
-    placeOrderBtn.addEventListener("click", placeOrder);
+    placeOrderBtn?.addEventListener("click", placeOrder);
 
     async function placeOrder() {
         const orderItems = []; //define empty array to hold the order items
@@ -572,7 +572,7 @@ if (pageId === "shop") {
     //create customer
     const setCustomer = document.querySelector("#customer-form");
 
-    setCustomer.addEventListener("submit", async (e) => {
+    setCustomer?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const data = new FormData(setCustomer);
@@ -607,7 +607,7 @@ if (pageId === "shop") {
     //hold items
     const holdOrder = document.querySelector("#hold-order");
 
-    holdOrder.addEventListener("click", async function (e) {
+    holdOrder?.addEventListener("click", async function (e) {
         const orderItems = []; //define empty array to hold the order items
 
         // get the id and the quantity from the cart table
@@ -711,7 +711,7 @@ if (pageId === "shop") {
     });
 
     const getHoldItems = document.querySelector("#show-hold-item");
-    getHoldItems.addEventListener("click", async function () {
+    getHoldItems?.addEventListener("click", async function () {
         const config = {
             headers: {
                 Accept: "application/json",

@@ -24,6 +24,8 @@
                                                 Summary</a></li>
                                         <li><a href="{{ route('report.summary') }}" class="">Sales Details</a></li>
                                         <li><a href="{{ route('report.sale.trends') }}" class="">Sales Trends</a></li>
+                                        <li><a href="{{ route('report.item.summary') }}" class="">Item
+                                                Summary</a>
                                         <li><a href="{{ route('report.sale.items') }}" class="">Sales by Item</a>
                                         </li>
                                     </ul>
